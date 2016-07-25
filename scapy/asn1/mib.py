@@ -32,7 +32,7 @@ class MIBDict(DADict):
             x += "."
         max=0
         root="."
-        for k in self.keys():
+        for k in self.iterkeys():
             if x.startswith(self[k]+"."):
                 if max < len(self[k]):
                     max = len(self[k])
@@ -50,9 +50,11 @@ class MIBDict(DADict):
             return x
         xl[p] = self[xl[p]] 
         return ".".join(xl[p:])
-    def _make_graph(self, other_keys=[], **kargs):
-        nodes = [(k,self[k]) for k in self.keys()]
-        oids = [self[k] for k in self.keys()]
+    def _make_graph(self, other_keys=None, **kargs):
+        if other_keys is None:
+            other_keys = []
+        nodes = [(k, self[k]) for k in self.iterkeys()]
+        oids = [self[k] for k in self.iterkeys()]
         for k in other_keys:
             if k not in oids:
                 nodes.append(self.oidname(k),k)
@@ -114,7 +116,7 @@ def mib_register(ident, value, the_mib, unresolved):
 def load_mib(filenames):
     the_mib = {'iso': ['1']}
     unresolved = {}
-    for k in conf.mib.keys():
+    for k in conf.mib.iterkeys():
         mib_register(k, conf.mib[k].split("."), the_mib, unresolved)
 
     if type(filenames) is str:
@@ -448,6 +450,16 @@ x962Signature_oids = {
 
 ####### elliptic curves #######
 
+ansiX962Curve_oids = {
+        "prime192v1"                : "1.2.840.10045.3.1.1",
+        "prime192v2"                : "1.2.840.10045.3.1.2",
+        "prime192v3"                : "1.2.840.10045.3.1.3",
+        "prime239v1"                : "1.2.840.10045.3.1.4",
+        "prime239v2"                : "1.2.840.10045.3.1.5",
+        "prime239v3"                : "1.2.840.10045.3.1.6",
+        "prime256v1"                : "1.2.840.10045.3.1.7"
+        }
+
 certicomCurve_oids = {
         "ansit163k1"                : "1.3.132.0.1",
         "ansit163r1"                : "1.3.132.0.2",
@@ -556,6 +568,7 @@ x509_oids_sets = [
                  evPolicy_oids,
                  x962KeyType_oids,
                  x962Signature_oids,
+                 ansiX962Curve_oids,
                  certicomCurve_oids
                  ]
 
@@ -565,3 +578,28 @@ for oids_set in x509_oids_sets:
     x509_oids.update(oids_set)
 
 conf.mib = MIBDict(_name="MIB", **x509_oids)
+
+
+#########################
+## Hash mapping helper ##
+#########################
+
+# This dict enables static access to string references to the hash functions
+# of some algorithms from pkcs1_oids and x962Signature_oids.
+
+hash_by_oid = {
+        "1.2.840.113549.1.1.2"  : "md2",
+        "1.2.840.113549.1.1.3"  : "md4",
+        "1.2.840.113549.1.1.4"  : "md5",
+        "1.2.840.113549.1.1.5"  : "sha1",
+        "1.2.840.113549.1.1.11" : "sha256",
+        "1.2.840.113549.1.1.12" : "sha384",
+        "1.2.840.113549.1.1.13" : "sha512",
+        "1.2.840.113549.1.1.14" : "sha224",
+        "1.2.840.10045.4.1"     : "sha1",
+        "1.2.840.10045.4.3.1"   : "sha224",
+        "1.2.840.10045.4.3.2"   : "sha256",
+        "1.2.840.10045.4.3.3"   : "sha384",
+        "1.2.840.10045.4.3.4"   : "sha512"
+        }
+
